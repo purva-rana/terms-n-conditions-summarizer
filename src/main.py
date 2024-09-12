@@ -3,7 +3,7 @@ import os
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
 import dataHandler as dh
-from misc.stuff import *
+from userInput import *
 from constants import *
 
 import tensorflow as tf
@@ -19,7 +19,7 @@ def main():
     # Load data from the .json dataset
     dh.LoadData(DATA_PATH, di)
 
-    data.PrepareData(di)
+    tokenizer = data.PrepareData(di)
 
     # Length of output vector
     embeddingDim = 16
@@ -34,10 +34,27 @@ def main():
     model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 
     # Iterations over the dataset
-    numEpochs = 10
+    numEpochs = 40
 
     # Train the model
     model.fit(data.trainingSeqsPadded, data.trainingLabels, epochs=numEpochs, validation_data=(data.testingSeqsPadded, data.testingLabels), verbose=2)
+
+    model.save('models/1.keras')
+    print('Model Saved')
+
+    while True:
+        try:
+            userInputPaddedSequences = ProcessUserInput(tokenizer)
+            prediction = model.predict(userInputPaddedSequences)
+
+            print('Prediction: ', prediction[0][0])
+            print()
+            print()
+        except KeyboardInterrupt:
+            break
+        
+    print('\nExiting...')
+    return
 
     
 

@@ -61,7 +61,7 @@ class Data:
         self.testingSeqs = tokenizer.texts_to_sequences(self.testingSentences)
         self.testingSeqsPadded = np.array(pad_sequences(self.testingSeqs, padding='post', maxlen=MAX_LENGTH, truncating='post'))
 
-        return
+        return tokenizer
 
 
 def LoadData(filePath, instance) -> None:
