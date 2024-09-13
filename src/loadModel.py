@@ -3,18 +3,16 @@ import os
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
 import dataHandler as dh
+import modelDiskIO as mdio
 from userInput import *
 from constants import *
 
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras.preprocessing.text import Tokenizer
-from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 def main():
 
-    di = dh.DataInstance()
-    data = dh.Data()
+    di = dh.RawData()
+    data = dh.ProcessedData()
 
     # Load data from the .json dataset
     dh.LoadData(DATA_PATH, di)
@@ -25,7 +23,8 @@ def main():
     embeddingDim = 16
 
     # Load the model
-    model = tf.keras.models.load_model('models/1.h5')
+    model = mdio.LoadModel('../models/50.keras')
+    print(type(model))
     print('Model Loaded')
 
     while True:

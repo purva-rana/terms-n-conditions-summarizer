@@ -2,19 +2,19 @@ import json
 import numpy as np
 from constants import *
 
-from tensorflow.keras.preprocessing.text import Tokenizer
-from tensorflow.keras.preprocessing.sequence import pad_sequences
+# "type: ignore" here removes the annoying import error that only VSC shows (executes properly though)
+from tensorflow.keras.preprocessing.text import Tokenizer # type: ignore
+from tensorflow.keras.preprocessing.sequence import pad_sequences # type: ignore
+
+def SplitSentences(trainingSize, rawData) -> list | list:
+    return rawData.sentences[0:trainingSize], rawData.sentences[trainingSize:]
 
 
-def SplitSentences(trainingSize, di) -> list | list:
-    return di.sentences[0:trainingSize], di.sentences[trainingSize:]
+def SplitLabels(trainingSize, rawData) -> list | list:
+    return rawData.labels[0:trainingSize], rawData.labels[trainingSize:]
 
 
-def SplitLabels(trainingSize, di) -> list | list:
-    return di.labels[0:trainingSize], di.labels[trainingSize:]
-
-
-class DataInstance:
+class RawData:
     def __init__(self) -> None:
         self.sentences = []
         self.labels = []
@@ -22,27 +22,27 @@ class DataInstance:
         pass
 
 
-class Data:
+class ProcessedData:
     def __init__(self) -> None:
         self.trainingSentences = []
-        self.trainingLabels = []
-        self.testingSentences = []
-        self.testingLabels = []
+        self.trainingLabels    = []
+        self.testingSentences  = []
+        self.testingLabels     = []
 
-        self.trainingSeqs = []
+        self.trainingSeqs       = []
         self.trainingSeqsPadded = []
-        self.testingSeqs = []
-        self.testingSeqsPadded = []
+        self.testingSeqs        = []
+        self.testingSeqsPadded  = []
 
         self.vocabSize = 0
         
         pass
 
 
-    def PrepareData(self, di):
+    def PrepareData(self, rawData):
         # Prepare the training and testing sentences
-        self.trainingSentences, self.testingSentences = SplitSentences(TRAINING_SIZE, di)
-        self.trainingLabels,    self.testingLabels    = SplitLabels(TRAINING_SIZE, di)
+        self.trainingSentences, self.testingSentences = SplitSentences(TRAINING_SIZE, rawData)
+        self.trainingLabels,    self.testingLabels    = SplitLabels(TRAINING_SIZE, rawData)
 
         # Prepare the training and testing labels
         self.trainingLabels = np.array(self.trainingLabels)
