@@ -7,6 +7,7 @@ from tensorflow.keras.models import Sequential # type: ignore
 # O/P: Nothing
 def SaveModel(model, modelName) -> None:
     try:
+        print('Saving model...')
         model.save(f'../models/{modelName}.keras')
         print(f'Model saved as {modelName}.keras')
 
