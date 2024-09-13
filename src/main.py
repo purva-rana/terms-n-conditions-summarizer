@@ -1,11 +1,13 @@
-# What in the python
+# oneDNN custom operations are on by default.
+# May see slightly different numerical results due to floating-point round-off errors from different computation orders.
+# To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
 import os
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+
 
 from constants import *
 import dataHandler as dh
 import modelDiskIO as mdio
-
 
 from numpy import array as nparray
 import tensorflow as tf
@@ -23,6 +25,7 @@ def ProcessUserInput(tokenizer):
     return nparray(pad_sequences(inputSequences, maxlen=MAX_LENGTH, padding='post', truncating='post'))
 
 
+# Entry point of program
 def main():
 
     # Load data from the dataset
@@ -50,13 +53,17 @@ def main():
     numEpochs = 5
 
     # Train the model
-    model.fit(data.trainingSeqsPadded, data.trainingLabels, epochs=numEpochs, validation_data=(data.testingSeqsPadded, data.testingLabels), verbose=2)
+    model.fit(data.trainingSeqs, data.trainingLabels,
+              epochs=numEpochs,
+              validation_data=(data.testingSeqs, data.testingLabels),
+              verbose=2)
+
 
     # Save the model to disk
-    saveModelOrNot = input('Save model to disk? (y/n): ')
+    saveModelOrNot = input('\n\nSave model to disk? (y/n): ')
     if (saveModelOrNot.lower() == 'y'):
-        mdio.SaveModel(model, f'{numEpochs}epochs.keras')
-
+        mdio.SaveModel(model, f'{numEpochs}epochs')
+    print('\n')
 
     # Ask user to enter sentences, and predict if they're sarcastic or not
     while True:
@@ -67,6 +74,7 @@ def main():
             print('Prediction: ', prediction[0][0])
             print()
             print()
+
         except KeyboardInterrupt:
             break
         
