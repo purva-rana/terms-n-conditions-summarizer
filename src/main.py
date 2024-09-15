@@ -14,10 +14,16 @@ import tensorflow as tf
 from tensorflow.keras.preprocessing.sequence import pad_sequences # type: ignore
 
 
-# Get a sentence from the user, and make it into a processable form for the model
-# I/P: Tokenizer that was used while preparing the training data
-# O/P: Sequence generated from the user input and tokenizer in an np.array()
+
 def ProcessUserInput(tokenizer):
+    """
+        Get a sentence from the user, and make it into a processable form for the model.
+
+        `tokenizer` - Tokenizer that was used while preparing the training data.
+        
+        **Returns**\\
+        Sequence generated from the user input and tokenizer in an np.array().
+    """
 
     inputText = input('Sentence: ')
     inputSequences = tokenizer.texts_to_sequences([inputText])
@@ -25,17 +31,17 @@ def ProcessUserInput(tokenizer):
     return nparray(pad_sequences(inputSequences, maxlen=MAX_LENGTH, padding='post', truncating='post'))
 
 
-# Entry point of program
+
 def main():
 
     # Load data from the dataset
-    # DATA_PATH defined in constants.py
-    rawData = dh.RawData()
-    dh.LoadData(DATA_PATH, rawData)
+    rawData = dh.LoadData(DATA_PATH)
 
     # Process the raw data
     data = dh.ProcessedData()
-    tokenizer = data.PrepareData(rawData)
+    tokenizer = data.ProcessRawData(rawData)
+
+
 
     # Length of output vector
     embeddingDim = 16
@@ -65,14 +71,18 @@ def main():
               verbose=2)
 
 
-    # Save the model to disk
+
+    # Save the model
     saveModelOrNot = input('\n\nSave model to disk? (y/n): ')
     customAddition = input('Append any custom name at end (leave blank if no): ')
     if (saveModelOrNot.lower() == 'y'):
         mdio.SaveModel(model, f'{numEpochs}epochs_{customAddition}')
     print('\n')
 
-    model = mdio.LoadModel('../models/20epochs_GAP1D.keras')
+    # Load an existing model
+    # model = mdio.LoadModel('../models/20epochs_GAP1D.keras')
+
+
 
     # Ask user to enter sentences, and predict if they're sarcastic or not
     while True:
@@ -81,9 +91,8 @@ def main():
             prediction = model.predict(userInputPaddedSequences)
             
             # Prediction is <class 'numpy.ndarray'>
-            print(f'Prediction: {'{:.4f}'.format(prediction[0][0] * 100)}% sarcastic')
-            print()
-            print()
+            print('Prediction: {:.4f}% sarcastic'.format(prediction[0][0] * 100))
+            print('\n\n', end='')
 
         except KeyboardInterrupt:
             break

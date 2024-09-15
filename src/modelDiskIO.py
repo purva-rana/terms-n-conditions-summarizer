@@ -4,10 +4,16 @@ from tensorflow.keras.models import load_model # type: ignore
 from tensorflow.keras.models import Sequential # type: ignore
 
 
-# Save the model to disk, to be reused later on.
-# I/P: Model to save, and what name to save it with (extension will be .keras, no need to include it in modelName)
-# O/P: Nothing
-def SaveModel(model, modelName) -> None:
+def SaveModel(model, modelName: str) -> None:
+    """
+        Save the model to disk, to be reused later on.
+
+        `model` - model to save\\
+        `modelName` - path and name to save as (ex: '../models/exampleModel')\\
+        extension will be '.keras'\\
+        The above example will be saved to ../models/exampleModel.keras
+    """
+    
     basePath = f'../models/{modelName}.keras'
     
     try:
@@ -48,11 +54,20 @@ def SaveModel(model, modelName) -> None:
     return
 
 
-# Load the model from disk
-# I/P: Path of model to be loaded, throws a ValueError if path is invalid
-#      Exits program if extension is not '.keras'
-# O/P: Loaded model
-def LoadModel(modelPath) -> Sequential:
+
+def LoadModel(modelPath: str) -> Sequential:
+    """
+        Load the model from disk.
+
+        `modelPath` - path of the model to be loaded.
+
+        **Returns**\\
+        Loaded model
+        
+        Throws a ValueError if path is invalid.\\
+        Exits program if extension is not '.keras'.
+
+    """
 
     if modelPath[-6:] != '.keras':
         print(f'[ERROR]: File extension invalid, should end in ".keras", exiting...')
@@ -70,6 +85,7 @@ def LoadModel(modelPath) -> Sequential:
         exit()
     
     return model
+
 
 
 def main():
