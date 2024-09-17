@@ -79,8 +79,8 @@ def main():
         mdio.SaveModel(model, f'{numEpochs}epochs_{customAddition}')
     print('\n')
 
-    # Load an existing model
-    # model = mdio.LoadModel('../models/20epochs_GAP1D.keras')
+    # # Load an existing model
+    # model = mdio.LoadModel('../models/20epochs_BidirectionLSTM.keras')
 
 
 
