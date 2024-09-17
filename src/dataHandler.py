@@ -117,8 +117,8 @@ def LoadData(filePath: str) -> RawData:
 
     # Prepare lists
     for item in datastore:
-        rawData.sentences.append(item['headline'])
-        rawData.labels.append(item['is_sarcastic'])
+        rawData.sentences.append(item['sentence'])
+        rawData.labels.append(item['is_flagged'])
         # rawData.urls.append(item['article_link'])
     
     return rawData
