@@ -1,48 +1,98 @@
-# What in the python
+# oneDNN custom operations are on by default.
+# May see slightly different numerical results due to floating-point round-off errors from different computation orders.
+# To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
 import os
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
-import dataHandler as dh
-from misc.stuff import *
-from constants import *
 
+from constants import *
+import dataHandler as dh
+import modelDiskIO as mdio
+import modelProcessing as mpr
+
+from numpy import array as nparray
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras.preprocessing.text import Tokenizer
-from tensorflow.keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.preprocessing.sequence import pad_sequences # type: ignore
+
 
 def main():
 
-    di = dh.DataInstance()
-    data = dh.Data()
+    # Load data from the dataset
+    tempDataPath = '../data/final/final-data-3863.json'
+    rawData = dh.LoadDataFromJSON(tempDataPath)
 
-    # Load data from the .json dataset
-    dh.LoadData(DATA_PATH, di)
+    # Process the raw data
+    data = dh.ProcessedData()
+    tokenizer = data.ProcessRawData(rawData)
 
-    data.PrepareData(di)
+    if input('Train new model? (y/n): ').lower() == 'y':
 
-    # Length of output vector
-    embeddingDim = 16
+        numEpochs = 50
+        model = mpr.TrainModel(data, 50)
+
+        # Save the model
+        while True:
+            saveModelOrNot = input('\n\nSave model to disk? (y/n): ')
+            if saveModelOrNot in ['y', 'n']:
+                break
+                
+        if (saveModelOrNot.lower() == 'y'):
+            customAddition = input('Append any custom name at end (leave blank if no): ')
+            mdio.SaveModel(model, f'{numEpochs}ep_{customAddition}')
+        print('\n')
+
+
+    # Load an existing model
+    else:
+        print('\nSelect model to load')
+        modelName = input('Model name: ')
+        model = mdio.LoadModel(f'../models/{modelName}.keras')
+
+
+    print('\n\n         Options')
+    print('  1 | Manual sentence entry.')
+    print('  2 | Process .txt file.')
+    print('  3 | Exit.')
+    userChoice = int(input('    Choice: '))
+
+    while userChoice not in [1, 2, 3]:
+        print('Invalid choice, try again')
     
-    # Define and compile the model
-    model = tf.keras.Sequential([
-        tf.keras.layers.Embedding(data.vocabSize, embeddingDim),
-        tf.keras.layers.GlobalAveragePooling1D(),
-        tf.keras.layers.Dense(24, activation='relu'),
-        tf.keras.layers.Dense(1,  activation='sigmoid')
-    ])
-    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 
-    # Iterations over the dataset
-    numEpochs = 10
+    match userChoice:
+        case 1:
+            try:
+                while True:
+                    mpr.ProcessSingleInput(tokenizer, model)
+            except KeyboardInterrupt:
+                print('Exiting...')
 
-    # Train the model
-    model.fit(data.trainingSeqsPadded, data.trainingLabels, epochs=numEpochs, validation_data=(data.testingSeqsPadded, data.testingLabels), verbose=2)
+        case 2:
+            filePath = input('Enter path of file: ')
+            print('\n\n         Options')
+            print('  1 | Save to file.')
+            print('  2 | Display on terminal.')
+            saveChoice = int(input('    Choice: '))
+            while saveChoice not in [1, 2]:
+                print('Invalid choice, try again')
+        
+            filePath = '../misc/testing.txt'
+
+            sentences, predictions = mpr.ProcessBlockInput(tokenizer, model, filePath)
+
+            if saveChoice == 1:
+                dh.SavePredictionsToFile(sentences, predictions)
+
+            else:
+                for i in range(len(predictions)):
+                    if predictions[i][0][0] > THRESHOLD_VALUE:
+                        print(f'\nSentence: {sentences[i]}')
+                        print('Prediction: {:.4f}% important\n'.format(predictions[i][0][0] * 100))
 
     
+    return
+
+
 
 if __name__ == '__main__':
     main()
-
-# 1 - Summarizer
-# 2 - Sentiment analysis to analyze text and flag harmful or potentially malicious statement in the T&C
