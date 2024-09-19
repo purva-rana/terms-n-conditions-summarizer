@@ -35,64 +35,68 @@ def ProcessUserInput(tokenizer):
 def main():
 
     # Load data from the dataset
-    rawData = dh.LoadData(ACTUAL_DATA_PATH)
+    tempDataPath = '../data/discord/discordTOS.json'
+    rawData = dh.LoadData(tempDataPath)
 
     # Process the raw data
     data = dh.ProcessedData()
     tokenizer = data.ProcessRawData(rawData)
 
 
-
-    # # Length of output vector
-    # embeddingDim = 16
-    
-    # # Define and compile the model
-    # model = tf.keras.Sequential([
-    #     tf.keras.layers.Embedding(data.vocabSize, embeddingDim),
-    #     # # works fine at 20 epochs
-    #     # tf.keras.layers.GlobalAveragePooling1D(),
+    if input('Train new model? (y/n): ').lower() == 'y':
+        # Length of output vector
+        embeddingDim = 16
         
-    #     # works fine at 20 epochs (might be the best here, needs further testing to confirm)
-    #     tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(64)),
+        # Define and compile the model
+        model = tf.keras.Sequential([
+            tf.keras.layers.Embedding(data.vocabSize, embeddingDim),
+            # # works fine at 20 epochs
+            # tf.keras.layers.GlobalAveragePooling1D(),
+            
+            # works fine at 20 epochs (might be the best here, needs further testing to confirm)
+            tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(64)),
 
-    #     # tf.keras.layers.LSTM(64), # not as good
-    #     tf.keras.layers.Dense(24, activation='relu'),
-    #     tf.keras.layers.Dense(1,  activation='sigmoid')
-    # ])
-    # model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+            # tf.keras.layers.LSTM(64), # not as good
+            tf.keras.layers.Dense(24, activation='relu'),
+            tf.keras.layers.Dense(1,  activation='sigmoid')
+        ])
+        model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 
-    # # Iterations over the dataset
-    # numEpochs = 50
+        # Iterations over the dataset
+        numEpochs = 50
 
-    # # Train the model
-    # model.fit(data.trainingSeqs, data.trainingLabels,
-    #           epochs=numEpochs,
-    #           validation_data=(data.testingSeqs, data.testingLabels),
-    #           verbose=2)
+        # Train the model
+        model.fit(data.trainingSeqs, data.trainingLabels,
+                epochs=numEpochs,
+                validation_data=(data.testingSeqs, data.testingLabels),
+                verbose=2)
+
+        # Save the model
+        saveModelOrNot = input('\n\nSave model to disk? (y/n): ')
+        customAddition = input('Append any custom name at end (leave blank if no): ')
+        if (saveModelOrNot.lower() == 'y'):
+            mdio.SaveModel(model, f'{numEpochs}epochs_{customAddition}')
+        print('\n')
 
 
-
-    # # Save the model
-    # saveModelOrNot = input('\n\nSave model to disk? (y/n): ')
-    # customAddition = input('Append any custom name at end (leave blank if no): ')
-    # if (saveModelOrNot.lower() == 'y'):
-    #     mdio.SaveModel(model, f'{numEpochs}epochs_{customAddition}')
-    # print('\n')
-
-    # # Load an existing model
-    # model = mdio.LoadModel('../models/20epochs_BidirectionLSTM.keras')
-    # model = mdio.LoadModel('../models/20epochs_GAP1D.keras')
-    model = mdio.LoadModel('../models/50epochs_BidirectionalLSTM.keras')
-
+    # Load an existing model
+    else:
+        print('\nLoading new model...')
+        modelName = input('Model name: ')
+        model = mdio.LoadModel(f'../models/{modelName}.keras')
+        # model = mdio.LoadModel('../models/20epochs_BidirectionLSTM.keras')
+        # model = mdio.LoadModel('../models/20epochs_GAP1D.keras')
+        # model = mdio.LoadModel('../models/50epochs_BidirectionalLSTM.keras')
 
 
     # Ask user to enter sentences, and predict if they're sarcastic or not
+    print('\n\n', end='')
     while True:
         try:
             userInputPaddedSequences = ProcessUserInput(tokenizer)
             prediction = model.predict(userInputPaddedSequences)
 
-            print(userInputPaddedSequences)
+            # print(userInputPaddedSequences)
             
             # Prediction is <class 'numpy.ndarray'>
             print('Prediction: {:.4f}% malicious'.format(prediction[0][0] * 100))

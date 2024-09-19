@@ -19,14 +19,14 @@ def SaveModel(model, modelName: str) -> None:
     try:
         # Check if file already exists
         if os.path.exists(basePath):
-            print(f'The file {modelName}.keras already exists.')
+            print(f'\nThe file {modelName}.keras already exists.')
             user_input = input('Do you want to overwrite it? (y/n): ').strip().lower()
             
             # Overwrite the existing file
             if user_input == 'y':
                 os.remove(basePath)
                 model.save(basePath)
-                print(f'Deleting old file {modelName}.keras')
+                print(f'\nDeleting old file {modelName}.keras')
                 print(f'Model saved as {modelName}.keras')
 
             # Find a new name with an incrementing suffix
@@ -84,6 +84,7 @@ def LoadModel(modelPath: str) -> Sequential:
         print('[ERROR]: Unknown error occured wihle loading model, exiting...')
         exit()
     
+    print(f'{modelPath} loaded successfully')
     return model
 
 
