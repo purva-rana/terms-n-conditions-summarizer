@@ -8,67 +8,11 @@ os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 from constants import *
 import dataHandler as dh
 import modelDiskIO as mdio
+import modelProcessing as mpr
 
 from numpy import array as nparray
 import tensorflow as tf
 from tensorflow.keras.preprocessing.sequence import pad_sequences # type: ignore
-
-
-
-def ProcessUserInput(tokenizer):
-    """
-        Get a sentence from the user, and make it into a processable form for the model.
-
-        `tokenizer` - Tokenizer that was used while preparing the training data.
-        
-        **Returns**\\
-        Sequence generated from the user input and tokenizer in an np.array().
-    """
-
-    inputText = input('Sentence: ')
-    inputSequences = tokenizer.texts_to_sequences([inputText])
-    
-    return nparray(pad_sequences(inputSequences, maxlen=MAX_LENGTH, padding='post', truncating='post'))
-
-
-
-def TrainModel(data : dh.ProcessedData, numEpochs : int):
-    """
-       Trains a tf.keras model with the given data
-
-       `data` - The processed data.\\
-       `numEpochs` - Number of epochs to fit the model with.
-       
-       **Returns**\\
-       The model
-    """
-    # Length of output vector
-    embeddingDim = 16
-    
-    # Define and compile the model
-    model = tf.keras.Sequential([
-        tf.keras.layers.Embedding(data.vocabSize, embeddingDim),
-        # # works fine at 20 epochs
-        # tf.keras.layers.GlobalAveragePooling1D(),
-        
-        # works fine at 20 epochs (might be the best here, needs further testing to confirm)
-        tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(64)),
-
-        # tf.keras.layers.LSTM(64), # not as good
-        tf.keras.layers.Dense(24, activation='relu'),
-        tf.keras.layers.Dense(1,  activation='sigmoid')
-    ])
-    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
-
-    # Train the model
-    model.fit(data.trainingSeqs, data.trainingLabels,
-            epochs=numEpochs,
-            validation_data=(data.testingSeqs, data.testingLabels),
-            verbose=2)
-    
-    return model
-
-
 
 
 def main():
@@ -81,74 +25,71 @@ def main():
     data = dh.ProcessedData()
     tokenizer = data.ProcessRawData(rawData)
 
+    if input('Train new model? (y/n): ').lower() == 'y':
 
-    # if input('Train new model? (y/n): ').lower() == 'y':
+        numEpochs = 50
+        model = mpr.TrainModel(tokenizer, data, 50)
 
-    #     numEpochs = 50
-    #     model = TrainModel(data, 50)
-
-    #     # Save the model
-    #     while True:
-    #         saveModelOrNot = input('\n\nSave model to disk? (y/n): ')
-    #         if saveModelOrNot in ['y', 'n']:
-    #             break
+        # Save the model
+        while True:
+            saveModelOrNot = input('\n\nSave model to disk? (y/n): ')
+            if saveModelOrNot in ['y', 'n']:
+                break
                 
-    #     customAddition = input('Append any custom name at end (leave blank if no): ')
-    #     if (saveModelOrNot.lower() == 'y'):
-    #         mdio.SaveModel(model, f'{numEpochs}epochs_{customAddition}')
-    #     print('\n')
+        if (saveModelOrNot.lower() == 'y'):
+            customAddition = input('Append any custom name at end (leave blank if no): ')
+            mdio.SaveModel(model, f'{numEpochs}epochs_{customAddition}')
+        print('\n')
 
-    # # Load an existing model
-    # else:
-    #     print('\nLoading saved model...')
-    #     modelName = input('Model name: ')
-    #     model = mdio.LoadModel(f'../models/{modelName}.keras')
 
-    model = mdio.LoadModel(f'../models/50epochs_FinalData_v2.keras')
+    # Load an existing model
+    else:
+        print('\nSelect model to load')
+        modelName = input('Model name: ')
+        model = mdio.LoadModel(f'../models/{modelName}.keras')
 
-    # Ask user to enter sentences, and predict if they're sarcastic or not
-    # print('\n\n', end='')
-    # while True:
-    #     try:
-    #         userInputPaddedSequences = ProcessUserInput(tokenizer)
-    #         prediction = model.predict(userInputPaddedSequences)
 
-    #         # print(userInputPaddedSequences)
-            
-    #         # Prediction is <class 'numpy.ndarray'>
-    #         print('Prediction: {:.4f}% important'.format(prediction[0][0] * 100))
-    #         print('\n\n', end='')
+    print('\n\n         Options')
+    print('  1 | Manual sentence entry.')
+    print('  2 | Process .txt file.')
+    print('  3 | Exit.')
+    userChoice = int(input('    Choice: '))
 
-    #     except KeyboardInterrupt:
-    #         break
+    while userChoice not in [1, 2, 3]:
+        print('Invalid choice, try again')
     
 
-    # Get user sentences
-    sentences = dh.LoadTextFromFile('../testing.txt')
+    match userChoice:
+        case 1:
+            try:
+                while True:
+                    mpr.ProcessSingleInput(tokenizer, model)
+            except KeyboardInterrupt:
+                print('Exiting...')
 
-    sentenceSequences = []
-    # Tokenize the loaded sentences
-    for sentence in sentences:
-        sentenceSequences.append(tokenizer.texts_to_sequences([sentence]))
-
-        sentenceSequences[-1] = nparray(pad_sequences(sentenceSequences[-1], maxlen=MAX_LENGTH, padding='post', truncating='post'))
-    
-
-    predictions = []
-
-    # for sentence in sentenceSequences:
-    for i in range(len(sentenceSequences)):
-        # prediction = model.predict(sentenceSequences[i])
-        predictions.append(model.predict(sentenceSequences[i]))
-
-    # for prediction in predictions:
-    for i in range(len(predictions)):
-        print(f'\nSentence: {sentences[i]}')
-        print('Prediction: {:.4f}% important'.format(predictions[i][0][0] * 100))
-        print('\n\n', end='')
+        case 2:
+            filePath = input('Enter path of file: ')
+            print('\n\n         Options')
+            print('  1 | Save to file.')
+            print('  2 | Display on terminal.')
+            saveChoice = int(input('    Choice: '))
+            while saveChoice not in [1, 2]:
+                print('Invalid choice, try again')
         
+            filePath = '../misc/testing.txt'
+
+            sentences, predictions = mpr.ProcessBlockInput(tokenizer, model, filePath)
+
+            if saveChoice == 1:
+                dh.SavePredictionsToFile(sentences, predictions)
+
+            else:
+                for i in range(len(predictions)):
+                    if predictions[i][0][0] > THRESHOLD_VALUE:
+                        print(f'\nSentence: {sentences[i]}')
+                        print('Prediction: {:.4f}% important\n'.format(predictions[i][0][0] * 100))
+
     
-    print('\nExiting...')
     return
 
 

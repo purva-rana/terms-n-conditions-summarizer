@@ -40,8 +40,7 @@ def SplitLabels(trainingSize: int, labels: list) -> list | list:
 class RawData:
     def __init__(self) -> None:
         self.sentences = [] # Actual sentence
-        self.labels = []    # is_sarcastic or not (boolean)
-        # self.urls = []      # Link to article, not used in this program 
+        self.labels = []    # is_flagged or not (boolean)
         pass
 
 
@@ -118,9 +117,8 @@ def LoadDataFromJSON(filePath: str) -> RawData:
 
     # Prepare lists
     for item in datastore:
-        rawData.sentences.append(item['sentence'])
         rawData.labels.append(item['is_flagged'])
-        # rawData.urls.append(item['article_link'])
+        rawData.sentences.append(item['sentence'])
     
     return rawData
 
@@ -143,5 +141,20 @@ def LoadTextFromFile(filePath: str) -> list[str]:
     return sent_tokenize(paragraphs)
 
 
-if __name__ == '__main__':
-    LoadTextFromFile('../testing.txt')
+def SavePredictionsToFile(sentences, predictions):
+    # Ask the user where to save the file
+    filePath = input("Full path of where to save: ")
+
+    if filePath[-4:] != '.txt':
+        filePath += '.txt'
+
+    try:
+        with open(filePath, 'w') as file:
+            for sentence, prediction in zip(sentences, predictions):
+                file.write(f'Sentence: {sentence}\n')
+                file.write('Prediction: {:.4f}% important\n\n\n'.format(prediction[0][0] * 100))
+                
+        print(f"File saved successfully at {filePath}")
+        
+    except Exception as e:
+        print(f"An error occurred while saving the file: {e}")
