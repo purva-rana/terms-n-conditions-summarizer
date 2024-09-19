@@ -32,79 +32,122 @@ def ProcessUserInput(tokenizer):
 
 
 
+def TrainModel(data : dh.ProcessedData, numEpochs : int):
+    """
+       Trains a tf.keras model with the given data
+
+       `data` - The processed data.\\
+       `numEpochs` - Number of epochs to fit the model with.
+       
+       **Returns**\\
+       The model
+    """
+    # Length of output vector
+    embeddingDim = 16
+    
+    # Define and compile the model
+    model = tf.keras.Sequential([
+        tf.keras.layers.Embedding(data.vocabSize, embeddingDim),
+        # # works fine at 20 epochs
+        # tf.keras.layers.GlobalAveragePooling1D(),
+        
+        # works fine at 20 epochs (might be the best here, needs further testing to confirm)
+        tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(64)),
+
+        # tf.keras.layers.LSTM(64), # not as good
+        tf.keras.layers.Dense(24, activation='relu'),
+        tf.keras.layers.Dense(1,  activation='sigmoid')
+    ])
+    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+    # Train the model
+    model.fit(data.trainingSeqs, data.trainingLabels,
+            epochs=numEpochs,
+            validation_data=(data.testingSeqs, data.testingLabels),
+            verbose=2)
+    
+    return model
+
+
+
+
 def main():
 
     # Load data from the dataset
-    tempDataPath = '../data/discord/discordTOS.json'
-    rawData = dh.LoadData(tempDataPath)
+    tempDataPath = '../data/final/final-data.json'
+    rawData = dh.LoadDataFromJSON(tempDataPath)
 
     # Process the raw data
     data = dh.ProcessedData()
     tokenizer = data.ProcessRawData(rawData)
 
 
-    if input('Train new model? (y/n): ').lower() == 'y':
-        # Length of output vector
-        embeddingDim = 16
-        
-        # Define and compile the model
-        model = tf.keras.Sequential([
-            tf.keras.layers.Embedding(data.vocabSize, embeddingDim),
-            # # works fine at 20 epochs
-            # tf.keras.layers.GlobalAveragePooling1D(),
-            
-            # works fine at 20 epochs (might be the best here, needs further testing to confirm)
-            tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(64)),
+    # if input('Train new model? (y/n): ').lower() == 'y':
 
-            # tf.keras.layers.LSTM(64), # not as good
-            tf.keras.layers.Dense(24, activation='relu'),
-            tf.keras.layers.Dense(1,  activation='sigmoid')
-        ])
-        model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+    #     numEpochs = 50
+    #     model = TrainModel(data, 50)
 
-        # Iterations over the dataset
-        numEpochs = 50
+    #     # Save the model
+    #     while True:
+    #         saveModelOrNot = input('\n\nSave model to disk? (y/n): ')
+    #         if saveModelOrNot in ['y', 'n']:
+    #             break
+                
+    #     customAddition = input('Append any custom name at end (leave blank if no): ')
+    #     if (saveModelOrNot.lower() == 'y'):
+    #         mdio.SaveModel(model, f'{numEpochs}epochs_{customAddition}')
+    #     print('\n')
 
-        # Train the model
-        model.fit(data.trainingSeqs, data.trainingLabels,
-                epochs=numEpochs,
-                validation_data=(data.testingSeqs, data.testingLabels),
-                verbose=2)
+    # # Load an existing model
+    # else:
+    #     print('\nLoading saved model...')
+    #     modelName = input('Model name: ')
+    #     model = mdio.LoadModel(f'../models/{modelName}.keras')
 
-        # Save the model
-        saveModelOrNot = input('\n\nSave model to disk? (y/n): ')
-        customAddition = input('Append any custom name at end (leave blank if no): ')
-        if (saveModelOrNot.lower() == 'y'):
-            mdio.SaveModel(model, f'{numEpochs}epochs_{customAddition}')
-        print('\n')
-
-
-    # Load an existing model
-    else:
-        print('\nLoading new model...')
-        modelName = input('Model name: ')
-        model = mdio.LoadModel(f'../models/{modelName}.keras')
-        # model = mdio.LoadModel('../models/20epochs_BidirectionLSTM.keras')
-        # model = mdio.LoadModel('../models/20epochs_GAP1D.keras')
-        # model = mdio.LoadModel('../models/50epochs_BidirectionalLSTM.keras')
-
+    model = mdio.LoadModel(f'../models/50epochs_FinalData_v2.keras')
 
     # Ask user to enter sentences, and predict if they're sarcastic or not
-    print('\n\n', end='')
-    while True:
-        try:
-            userInputPaddedSequences = ProcessUserInput(tokenizer)
-            prediction = model.predict(userInputPaddedSequences)
+    # print('\n\n', end='')
+    # while True:
+    #     try:
+    #         userInputPaddedSequences = ProcessUserInput(tokenizer)
+    #         prediction = model.predict(userInputPaddedSequences)
 
-            # print(userInputPaddedSequences)
+    #         # print(userInputPaddedSequences)
             
-            # Prediction is <class 'numpy.ndarray'>
-            print('Prediction: {:.4f}% malicious'.format(prediction[0][0] * 100))
-            print('\n\n', end='')
+    #         # Prediction is <class 'numpy.ndarray'>
+    #         print('Prediction: {:.4f}% important'.format(prediction[0][0] * 100))
+    #         print('\n\n', end='')
 
-        except KeyboardInterrupt:
-            break
+    #     except KeyboardInterrupt:
+    #         break
+    
+
+    # Get user sentences
+    sentences = dh.LoadTextFromFile('../testing.txt')
+
+    sentenceSequences = []
+    # Tokenize the loaded sentences
+    for sentence in sentences:
+        sentenceSequences.append(tokenizer.texts_to_sequences([sentence]))
+
+        sentenceSequences[-1] = nparray(pad_sequences(sentenceSequences[-1], maxlen=MAX_LENGTH, padding='post', truncating='post'))
+    
+
+    predictions = []
+
+    # for sentence in sentenceSequences:
+    for i in range(len(sentenceSequences)):
+        # prediction = model.predict(sentenceSequences[i])
+        predictions.append(model.predict(sentenceSequences[i]))
+
+    # for prediction in predictions:
+    for i in range(len(predictions)):
+        print(f'\nSentence: {sentences[i]}')
+        print('Prediction: {:.4f}% important'.format(predictions[i][0][0] * 100))
+        print('\n\n', end='')
         
+    
     print('\nExiting...')
     return
 

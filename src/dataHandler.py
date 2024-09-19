@@ -1,6 +1,7 @@
 import json
 from numpy import array as nparray
 from constants import *
+from nltk.tokenize import sent_tokenize
 
 # "type: ignore" here removes the annoying import error that only VSC shows (executes properly though)
 from tensorflow.keras.preprocessing.text import Tokenizer # type: ignore
@@ -99,7 +100,7 @@ class ProcessedData:
 
 
 
-def LoadData(filePath: str) -> RawData:
+def LoadDataFromJSON(filePath: str) -> RawData:
     """
         Load the dataset into a RawData object.
         
@@ -122,3 +123,25 @@ def LoadData(filePath: str) -> RawData:
         # rawData.urls.append(item['article_link'])
     
     return rawData
+
+
+
+def LoadTextFromFile(filePath: str) -> list[str]:
+    """
+        The user will give a file path to a TnC/ToS document.
+        Load it, and convert the whole document into sentences.
+
+        `filePath` - path to the file.
+
+        **Returns**\\
+        The sentences
+    """
+
+    with open(filePath, 'r', encoding='utf-8') as file:
+        paragraphs = file.read()
+
+    return sent_tokenize(paragraphs)
+
+
+if __name__ == '__main__':
+    LoadTextFromFile('../testing.txt')
