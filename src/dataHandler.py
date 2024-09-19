@@ -18,7 +18,8 @@ def SplitSentences(trainingSize: int, sentences: list) -> list | list:
         **Returns**\\
         Split sentences
     """
-    return sentences[0:trainingSize], sentences[trainingSize:]
+    # return sentences[0:trainingSize], sentences[trainingSize:]
+    return sentences, sentences
 
 
 
@@ -32,7 +33,8 @@ def SplitLabels(trainingSize: int, labels: list) -> list | list:
         **Returns**\\
         Split labels
     """
-    return labels[0:trainingSize], labels[trainingSize:]
+    # return labels[0:trainingSize], labels[trainingSize:]
+    return labels, labels
 
 
 

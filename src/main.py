@@ -18,7 +18,7 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences # type: ignore
 def main():
 
     # Load data from the dataset
-    tempDataPath = '../data/final/final-data.json'
+    tempDataPath = '../data/final/final-data-3863.json'
     rawData = dh.LoadDataFromJSON(tempDataPath)
 
     # Process the raw data
@@ -28,7 +28,7 @@ def main():
     if input('Train new model? (y/n): ').lower() == 'y':
 
         numEpochs = 50
-        model = mpr.TrainModel(tokenizer, data, 50)
+        model = mpr.TrainModel(data, 50)
 
         # Save the model
         while True:
@@ -38,7 +38,7 @@ def main():
                 
         if (saveModelOrNot.lower() == 'y'):
             customAddition = input('Append any custom name at end (leave blank if no): ')
-            mdio.SaveModel(model, f'{numEpochs}epochs_{customAddition}')
+            mdio.SaveModel(model, f'{numEpochs}ep_{customAddition}')
         print('\n')
 
 
