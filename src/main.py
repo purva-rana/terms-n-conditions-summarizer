@@ -4,14 +4,15 @@ import modelDiskIO as mdio
 import modelProcessing as mpr
 
 import os
+from sklearn.metrics import f1_score
 from tensorflow.keras.preprocessing.sequence import pad_sequences # type: ignore
-
 
 def main():
     # May see slightly different numerical results due to floating-point round-off errors from different computation orders.
     # oneDNN custom operations are on by default.
     # To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
     os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+    print('\n\n', end='')
 
     # Load data from the dataset
     # tempDataPath = '../data/final/final-data-3863.json'
@@ -23,7 +24,7 @@ def main():
 
     if input('Train new model? (y/n): ').lower() == 'y':
 
-        numEpochs = 50
+        numEpochs = 10
         model = mpr.TrainModel(data, numEpochs)
 
         # Save the model
@@ -42,8 +43,31 @@ def main():
     else:
         print('\nSelect model to load')
         modelName = input('Model name: ')
-        model = mdio.LoadModel(f'../models/main/{modelName}.keras')
+        # model = mdio.LoadModel(f'../models/main/{modelName}.keras')
+        model = mdio.LoadModel(f'../models/paper/{modelName}.keras')
 
+
+    # -- Model Evaluation
+    # Loss and accuracy
+    loss, accuracy = model.evaluate(data.testingSeqs, data.testingLabels)
+    print(f'Test Loss: {loss:.4f}')
+    print(f'Test Accuracy: {accuracy:.4f}\n')
+
+    # F1 score
+    # Step 1: Make predictions
+    predictions = model.predict(data.testingSeqs)
+    # predicted_classes = (predictions > 0.3).astype(int)  # Adjust the threshold as needed for your use case
+
+    # Step 2: Calculate F1 score
+    for threshold in [0.3, 0.4, 0.5, 0.6, 0.7]:
+        predicted_classes = (predictions > threshold).astype(int)
+        f1 = f1_score(data.testingLabels, predicted_classes, average='binary')
+        print(f"Threshold: {threshold:.1f}, F1 Score: {f1:.4f}")
+    # f1 = f1_score(data.testingLabels, predicted_classes, average='binary')  # Use 'binary' for binary classification
+    # print(f'F1 Score: {f1:.4f}')
+
+
+    return
 
     print('\n\n         Options')
     print('  1 | Manual sentence entry.')
