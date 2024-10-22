@@ -1,5 +1,4 @@
 import os
-
 from tensorflow.keras.models import load_model # type: ignore
 from tensorflow.keras.models import Sequential # type: ignore
 

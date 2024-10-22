@@ -1,21 +1,17 @@
-# oneDNN custom operations are on by default.
-# May see slightly different numerical results due to floating-point round-off errors from different computation orders.
-# To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
-import os
-os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
-
-
 from constants import *
 import dataHandler as dh
 import modelDiskIO as mdio
 import modelProcessing as mpr
 
-from numpy import array as nparray
-import tensorflow as tf
+import os
 from tensorflow.keras.preprocessing.sequence import pad_sequences # type: ignore
 
 
 def main():
+    # May see slightly different numerical results due to floating-point round-off errors from different computation orders.
+    # oneDNN custom operations are on by default.
+    # To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+    os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
     # Load data from the dataset
     tempDataPath = '../data/final/final-data-3863.json'
@@ -28,7 +24,7 @@ def main():
     if input('Train new model? (y/n): ').lower() == 'y':
 
         numEpochs = 50
-        model = mpr.TrainModel(data, 50)
+        model = mpr.TrainModel(data, numEpochs)
 
         # Save the model
         while True:

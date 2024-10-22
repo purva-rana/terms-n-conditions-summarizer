@@ -1,13 +1,8 @@
-import os
-import sys
 import dataHandler as dh
 from constants import *
 
-
-
 from numpy import array as nparray
 import tensorflow as tf
-import logging
 from tensorflow.keras.preprocessing.sequence import pad_sequences # type: ignore
 
 

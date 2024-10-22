@@ -1,8 +1,7 @@
+from constants import *
 import json
 from numpy import array as nparray
-from constants import *
 from nltk.tokenize import sent_tokenize
-
 # "type: ignore" here removes the annoying import error that only VSC shows (executes properly though)
 from tensorflow.keras.preprocessing.text import Tokenizer # type: ignore
 from tensorflow.keras.preprocessing.sequence import pad_sequences # type: ignore
