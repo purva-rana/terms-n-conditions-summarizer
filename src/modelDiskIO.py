@@ -13,7 +13,7 @@ def SaveModel(model, modelName: str) -> None:
         The above example will be saved to ../models/exampleModel.keras
     """
     
-    basePath = f'../models/{modelName}.keras'
+    basePath = f'../main/models/{modelName}.keras'
     
     try:
         # Check if file already exists

@@ -14,8 +14,8 @@ def main():
     os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
     # Load data from the dataset
-    tempDataPath = '../data/final/final-data-3863.json'
-    rawData = dh.LoadDataFromJSON(tempDataPath)
+    # tempDataPath = '../data/final/final-data-3863.json'
+    rawData = dh.LoadDataFromJSON(FINAL_DATA)
 
     # Process the raw data
     data = dh.ProcessedData()
@@ -42,7 +42,7 @@ def main():
     else:
         print('\nSelect model to load')
         modelName = input('Model name: ')
-        model = mdio.LoadModel(f'../models/{modelName}.keras')
+        model = mdio.LoadModel(f'../models/main/{modelName}.keras')
 
 
     print('\n\n         Options')

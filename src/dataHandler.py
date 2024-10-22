@@ -2,6 +2,7 @@ from constants import *
 import json
 from numpy import array as nparray
 from nltk.tokenize import sent_tokenize
+from sklearn.model_selection import train_test_split
 # "type: ignore" here removes the annoying import error that only VSC shows (executes properly though)
 from tensorflow.keras.preprocessing.text import Tokenizer # type: ignore
 from tensorflow.keras.preprocessing.sequence import pad_sequences # type: ignore
@@ -76,8 +77,14 @@ class ProcessedData:
         """
 
         # Prepare the training and testing sentences
-        self.trainingSentences, self.testingSentences = SplitSentences(TRAINING_SIZE, rawData.sentences)
-        self.trainingLabels,    self.testingLabels    = SplitLabels(TRAINING_SIZE, rawData.labels)
+        # self.trainingSentences, self.testingSentences = SplitSentences(TRAINING_SIZE, rawData.sentences)
+        # self.trainingLabels,    self.testingLabels    = SplitLabels(TRAINING_SIZE, rawData.labels)
+        self.trainingSentences, self.testingSentences, self.trainingLabels, self.testingLabels = train_test_split(
+            rawData.sentences,
+            rawData.labels,
+            train_size=TRAINING_SIZE,
+            random_state=42,  # Optional: for reproducibility
+        )
 
         # Prepare the training and testing labels
         self.trainingLabels = nparray(self.trainingLabels)
