@@ -24,7 +24,7 @@ def main():
 
     if input('Train new model? (y/n): ').lower() == 'y':
 
-        numEpochs = 10
+        numEpochs = 75
         model = mpr.TrainModel(data, numEpochs)
 
         # Save the model
@@ -44,7 +44,7 @@ def main():
         print('\nSelect model to load')
         modelName = input('Model name: ')
         # model = mdio.LoadModel(f'../models/main/{modelName}.keras')
-        model = mdio.LoadModel(f'../models/paper/{modelName}.keras')
+        model = mdio.LoadModel(f'../models/new/{modelName}.keras')
 
 
     # -- Model Evaluation
@@ -59,8 +59,9 @@ def main():
     # predicted_classes = (predictions > 0.3).astype(int)  # Adjust the threshold as needed for your use case
 
     # Step 2: Calculate F1 score
-    for threshold in [0.3, 0.4, 0.5, 0.6, 0.7]:
+    for threshold in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7]:
         predicted_classes = (predictions > threshold).astype(int)
+        # print(predicted_classes)
         f1 = f1_score(data.testingLabels, predicted_classes, average='binary')
         print(f"Threshold: {threshold:.1f}, F1 Score: {f1:.4f}")
     # f1 = f1_score(data.testingLabels, predicted_classes, average='binary')  # Use 'binary' for binary classification

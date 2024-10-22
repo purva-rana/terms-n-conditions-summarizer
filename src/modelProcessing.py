@@ -24,10 +24,7 @@ def TrainModel(data : dh.ProcessedData, numEpochs : int):
         tf.keras.layers.Embedding(data.vocabSize, embeddingDim),
         # # works fine at 20 epochs
         # tf.keras.layers.GlobalAveragePooling1D(),
-        tf.keras.layers.Conv1D(filters=32, kernel_size=3, activation='relu'),
-        tf.keras.layers.MaxPooling1D(pool_size=2),
         
-        # works fine at 20 epochs (might be the best here, needs further testing to confirm)
         tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(64)),
 
         # tf.keras.layers.LSTM(64), # not as good
